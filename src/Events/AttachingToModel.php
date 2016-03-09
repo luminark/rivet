@@ -2,6 +2,6 @@
 
 namespace Luminark\Rivet\Events;
 
-class AttachingToModel extends AbstractRivetEvent
+class AttachingToModel extends AbstractAttachingEvent
 {
 }

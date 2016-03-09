@@ -7,6 +7,9 @@ use Luminark\Url\Models\Url;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\File\File;
 
+use Luminark\Rivet\Models\Rivet;
+use Luminark\Rivet\Interfaces\FileProcessorInterface;
+
 /**
  * Class RivetTest
  */
@@ -65,7 +68,7 @@ class RivetTest extends TestCase
     }
     
     /**
-     * Get Luminark Url package providers.
+     * Get Luminark Rivet package providers.
      *
      * @return array
      */
@@ -78,9 +81,14 @@ class RivetTest extends TestCase
     {
         $model = TestModel::create([]);
         $uploadedFile = $this->getTestUploadedFile();
+        $fileProcessor = $this->app->make(FileProcessorInterface::class);
         
-        $rivet1 = $model->attach('attachments', ['file' => $uploadedFile], false);
-        $rivet2 = $model->addAttachment(['file' => $uploadedFile], false);
+        $rivet1 = new Rivet([]);
+        $rivet1->file = $fileProcessor->processFile($rivet1, $uploadedFile);
+        $rivet1->save();
+        
+        $model->attach('attachments', $rivet1, false);
+        $model->addAttachment($rivet1, false);
         
         $model->load('attachments');
         
@@ -102,12 +110,16 @@ class RivetTest extends TestCase
     {
         $model = TestModel::create([]);
         $uploadedFile = $this->getTestUploadedFile();
+        $fileProcessor = $this->app->make(FileProcessorInterface::class);
         
-        $image = $model->setImage([
-            'file' => $uploadedFile,
+        $image = new Image([
             'alt' => 'Image alt',
             'title' => 'Image Title'
         ]);
+        $image->file = $fileProcessor->processFile($image, $uploadedFile);
+        $image->save();
+        
+        $model->setImage($image, true);
         
         $this->assertEquals('Image alt', $model->image->alt);
         $this->assertEquals('Image Title', $model->image->title);
@@ -118,11 +130,14 @@ class RivetTest extends TestCase
             'Invalid image filename.'
         );
         
-        $image = $model->setImage([
-            'file' => $uploadedFile,
+        $image = new Image([
             'alt' => 'Image alt 2',
             'title' => 'Image Title 2'
         ]);
+        $image->file = $fileProcessor->processFile($image, $uploadedFile);
+        $image->save();
+        
+        $model->setImage($image, true);
         
         $this->assertRegexp(
             '/image(\.\w+)?\.jpg/', 
@@ -136,7 +151,7 @@ class RivetTest extends TestCase
     public function testAttachingWithoutFile()
     {
         $model = TestModel::create([]);
-        $model->addAttachment([]);
+        $model->addAttachment(Rivet::create([]), true);
         
         $this->assertEquals(1, $model->attachments->count(), 'Invalid number of attachments in collection.');
     }
@@ -145,15 +160,26 @@ class RivetTest extends TestCase
     {
         $model = TestModel::create([]);
         $uploadedFile = $this->getTestUploadedFile();
+        $fileProcessor = $this->app->make(FileProcessorInterface::class);
         
-        $attachment1 = $model->addAttachment(['file' => $uploadedFile]);
-        $attachment2 = $model->addAttachment(['file' => $uploadedFile]);
+        $attachment1 = new Rivet([]);
+        $attachment2 = new Rivet([]);
+        $attachment1->file = $fileProcessor->processFile($attachment1, $uploadedFile);
+        $attachment2->file = $fileProcessor->processFile($attachment2, $uploadedFile);
+        $attachment1->save();
+        $attachment2->save();
         
-        $image = $model->setImage([
-            'file' => $uploadedFile,
+        $model->addAttachment($attachment1);
+        $model->addAttachment($attachment2);
+        
+        $image = new Image([
             'alt' => 'Image alt',
             'title' => 'Image Title'
         ]);
+        $image->file = $fileProcessor->processFile($image, $uploadedFile);
+        $image->save();
+        
+        $model->setImage($image);
         
         $model->removeAttachment($attachment1);
         $model->removeAttachment($attachment2->id);
@@ -166,7 +192,8 @@ class RivetTest extends TestCase
     public function testRemovingNonExistantAttachment()
     {
         $model = TestModel::create([]);
-        $attachment = $model->addAttachment([]);
+        $attachment = Rivet::create([]);
+        $model->addAttachment($attachment);
         
         $this->setExpectedException('InvalidArgumentException');
         
@@ -186,18 +213,17 @@ class RivetTest extends TestCase
     {
         $model = TestModel::create([]);
         $uploadedFile = $this->getTestUploadedFile();
+        $fileProcessor = $this->app->make(FileProcessorInterface::class);
         
-        $attachment1 = $model->addAttachment(['file' => $uploadedFile]);
+        $rivet1 = new Rivet([]);
+        $rivet1->file = $fileProcessor->processFile($rivet1, $uploadedFile);
+        $rivet1->save();
+        
+        $model->addAttachment($rivet1);
     }
     
     public function testAttachmentFiles()
     {
-        $model = TestModel::create([]);
-        $file = new File($this->getTestFilePath());
-        $attachment1 = $model->addAttachment(['file' => $file]);
-        
-        $model = TestModel::create([]);
-        $attachment2 = $model->addAttachment(['file' => $this->getTestFilePath()]);
     }
     
     protected function getTestUploadedFile()

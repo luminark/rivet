@@ -22,59 +22,60 @@ trait HasRivetsTrait
         return Rivet::class;
     }
     
-    public function attach($name, $data, $relationShouldLoad = true)
+    public function attach($attribute, $rivet, $relationShouldLoad = false)
     {
-        list($type, $class) = $this->getRivetConfig($name);
+        list($type, $class) = $this->getRivetConfig($attribute);
         
-        $rivet = null;
-        if ($type == 'property') {
-            $rivet = $this->attachAsProperty($name, $class, $data);
+        if (is_numeric($rivet)) {
+            $rivet = $class::findOrFail($rivet);
+        } elseif ( ! $rivet instanceof $class) {
+            throw new InvalidArgumentException("Invalid object provided for attaching to $attribute. Expected $class, got " . get_class($rivet) . ".");
         }
-        if ($type == 'collection') {
-            $rivet = $this->attachToCollection($name, $class, $data);
+        
+        if ($type == 'property') {
+            $this->attachAsProperty($attribute, $rivet);
+        } elseif ($type == 'collection') {
+            $this->attachToCollection($attribute, $rivet);
+        } else {
+            throw new InvalidArgumentException("Invalid type [$type] provided for attaching to $attribute.");
         }
         
         if($relationShouldLoad) {
-            $this->load($name);
+            $this->load($attribute);
         }
-        
-        return $rivet;
     }
     
-    protected function attachAsProperty($name, $class, array $data)
+    protected function attachAsProperty($attribute, Rivet $rivet)
     {
-        if ($this->$name) {
-            $this->removeRivet($name, $this->$name->id);
+        if ($this->$attribute) {
+            $this->removeRivet($attribute, $this->$attribute->id);
         }
         
-        return $this->attachToCollection($name, $class, $data);
+        return $this->attachToCollection($attribute, $rivet);
     }
     
-    protected function attachToCollection($name, $class, array $data)
+    protected function attachToCollection($collection, Rivet $rivet)
     {
-        $data['type'] = $name;
-        $rivet = new $class(array_except($data, ['file']));
-        
-        event(new AttachingToModel($this, $name, $rivet, $data));
+        $dispatcher = static::getEventDispatcher();
+        $dispatcher->fire(new AttachingToModel($this, $collection, $rivet));
         
         $rivet->save();
+        $this->$collection()->attach($rivet, ['collection' => $collection]);
         
-        $this->$name()->attach($rivet, ['collection' => $name]);
-        
-        event(new AttachedToModel($this, $name, $rivet, $data));
+        $dispatcher->fire(new AttachedToModel($this, $collection, $rivet));
         
         return $rivet;
     }
     
-    public function removeRivet($name, $rivet, $relationShouldLoad = true)
+    public function removeRivet($attribute, $rivet, $relationShouldLoad = false)
     {
-        list(, $class) = $this->getRivetConfig($name);
+        list(, $class) = $this->getRivetConfig($attribute);
         
         $result = null;
         if (is_numeric($rivet)) {
-            $result = $this->$name()->detach($rivet);
+            $result = $this->$attribute()->detach($rivet);
         } elseif ($rivet instanceof $class) {
-            $result = $this->$name()->detach($rivet->id);
+            $result = $this->$attribute()->detach($rivet->id);
         } else {
             throw new InvalidArgumentException('Only an ID or a Rivet object can be passed to removeRivet method.');
         }
@@ -84,7 +85,7 @@ trait HasRivetsTrait
         }
         
         if($relationShouldLoad) {
-            $this->load($name);
+            $this->load($attribute);
         }
         
         return $this;
@@ -138,9 +139,13 @@ trait HasRivetsTrait
             return $result;
         }
         
-        list($type) = $this->getRivetConfig($name);
+        if ( ! $result) {
+            $this->load($name);
+            $result = $this->getAttribute($name);
+        }
         
-        if ($type == 'property' && $result) {
+        list($type) = $this->getRivetConfig($name);
+        if ($type == 'property') {
             return $result->first();
         }
         
@@ -167,8 +172,10 @@ trait HasRivetsTrait
             null, 
             null,
             $class::getMorphToSortableManyOtherKey()
-        )->where('type', snake_case($name));
+        )->wherePivot('collection', snake_case($name));
     }
     
-    abstract public function load($relations); 
+    abstract public function getAttribute($key);
+    
+    abstract public function load($relations);
 }

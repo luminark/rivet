@@ -14,7 +14,7 @@ class CreateRivetsTable extends Migration
     {
         Schema::create('rivets', function (Blueprint $table) {
             $table->increments('id');
-            $table->string('type')->index();
+            $table->string('type');
             $table->text('values')->nullable();
             $table->timestamps();
         });

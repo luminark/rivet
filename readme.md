@@ -121,12 +121,12 @@ The MIT License (MIT). Please see [License File](LICENSE.md) for more informatio
 [ico-codecov]: https://img.shields.io/codecov/c/github/luminark/attachment.svg?style=flat-square
 [ico-sension]: https://img.shields.io/sensiolabs/i/50e08a2b-75f2-4f5f-b3be-ab4b0d6c9110.svg?style=flat-square
 
-[link-packagist]: https://packagist.org/packages/luminark/attachment
-[link-travis]: https://travis-ci.org/luminark/attachment
-[link-scrutinizer]: https://scrutinizer-ci.com/g/luminark/attachment/code-structure
-[link-code-quality]: https://scrutinizer-ci.com/g/luminark/attachment
-[link-downloads]: https://packagist.org/packages/luminark/attachment
+[link-packagist]: https://packagist.org/packages/luminark/rivet
+[link-travis]: https://travis-ci.org/luminark/rivet
+[link-scrutinizer]: https://scrutinizer-ci.com/g/luminark/rivet/code-structure
+[link-code-quality]: https://scrutinizer-ci.com/g/luminark/rivet
+[link-downloads]: https://packagist.org/packages/luminark/rivet
 [link-author]: https://github.com/mvrkljan
 [link-contributors]: ../../contributors
-[link-codecov]: https://codecov.io/github/luminark/attachment
-[link-sensio]: https://insight.sensiolabs.com/projects/50e08a2b-75f2-4f5f-b3be-ab4b0d6c9110
+[link-codecov]: https://codecov.io/github/luminark/rivet
+[link-sensio]: https://insight.sensiolabs.com/projects/04c0f40e-3cf6-4baf-8ba9-63e0a3d76b3a

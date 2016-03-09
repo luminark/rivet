@@ -5,21 +5,18 @@ namespace Luminark\Rivet\Events;
 use Illuminate\Database\Eloquent\Model;
 use Luminark\Rivet\Models\Rivet;
 
-abstract class AbstractRivetEvent
+abstract class AbstractAttachingEvent
 {
     public $model;
     
-    public $name;
+    public $collection;
     
     public $rivet;
     
-    public $data;
-    
-    public function __construct(Model $model, $name, Rivet $rivet, array $data)
+    public function __construct(Model $model, $collection, Rivet $rivet)
     {
         $this->model = $model;
-        $this->name = $name;
+        $this->collection = $collection;
         $this->rivet = $rivet;
-        $this->data = $data;
     }
 }
