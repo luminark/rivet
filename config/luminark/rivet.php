@@ -3,8 +3,8 @@
 return [
   
     'storage' => [
-        'temp' => storage_path('temp'),
-        'default' => storage_path('rivet')
+        'temp' => 'temp',
+        'default' => 'rivet'
         // 'Model::class' => 'path to storage dir'
     ]  
     

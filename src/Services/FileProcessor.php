@@ -3,7 +3,7 @@
 namespace Luminark\Rivet\Services;
 
 use Luminark\Rivet\Interfaces\FileProcessorInterface;
-use Illuminate\Contracts\Filesystem\Filesystem;
+use Illuminate\Contracts\Filesystem\Factory as Storage;
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Contracts\Config\Repository as Config;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
@@ -16,18 +16,18 @@ use Luminark\Rivet\Events\MovedRivetFile;
 
 class FileProcessor implements FileProcessorInterface
 {
-    protected $filesystem;
+    protected $storage;
     
     protected $dispatcher;
     
     protected $config;
     
     public function __construct(
-        Filesystem $filesystem, 
+        Storage $storage, 
         Dispatcher $dispatcher, 
         Config $config
     ) {
-        $this->filesystem = $filesystem;
+        $this->storage = $storage;
         $this->dispatcher = $dispatcher;
         $this->config = $config;
     }
@@ -51,7 +51,7 @@ class FileProcessor implements FileProcessorInterface
         $filePath = $this->getStoragePath(get_class($rivet)) 
             . DIRECTORY_SEPARATOR 
             . $tempFile->getBasename();
-        while($this->filesystem->exists($filePath)) {
+        while($this->storage->exists($filePath)) {
             $filePath = $this->generateUniqueFilename($filePath);
         }
         
@@ -59,7 +59,7 @@ class FileProcessor implements FileProcessorInterface
             new MovingRivetFile($rivet, $tempFile)
         );
         
-        $this->filesystem->put($filePath, file_get_contents($tempFile->getRealPath()));
+        $this->storage->put($filePath, file_get_contents($tempFile->getRealPath()));
         
         $this->dispatcher->fire(
             new MovedRivetFile($rivet, $filePath)
@@ -114,7 +114,7 @@ class FileProcessor implements FileProcessorInterface
             'path' => $filePath,
             'name' => basename($filePath),
             'mime' => $file->getMimeType(),
-            'size' => $this->filesystem->size($filePath)
+            'size' => $this->storage->size($filePath)
         ];
     }
 }

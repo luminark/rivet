@@ -48,6 +48,17 @@ class RivetTest extends TestCase
         $this->artisan('migrate:rollback', [
           '--database' => 'testbench'
         ]);
+        
+        $storageDir = $this->app['config']['filesystems.disks.local.root'];
+        if ($storageDir) {
+            foreach(glob($storageDir . DIRECTORY_SEPARATOR . '*') as $path) {
+                if (is_dir($path)) {
+                    foreach(glob($path . DIRECTORY_SEPARATOR . '*') as $file) {
+                        unlink($file);
+                    }
+                }
+            }
+        }
     }
     
     /**
@@ -207,6 +218,67 @@ class RivetTest extends TestCase
         $this->setExpectedException('InvalidArgumentException');
         
         $model->removeAttachment('foo');
+    }
+    
+    public function testRivetController()
+    {
+        $this->app['config']->set(
+            'luminark.rivet.' . Image::class . '.file_attributes',
+            ['file']
+        );
+        $mockRequest = \Mockery::mock('Illuminate\Http\Request');
+        $mockRequest->shouldReceive('all')
+            ->andReturn([
+                'title' => 'Title',
+                'alt' => 'Alt text',
+                'file' => $this->getTestUploadedFile()
+            ]);
+        
+        $controller = new TestController();
+        $image = $controller->create($mockRequest);
+        
+        $this->assertEquals('Title', $image->title, 'Invalid title set on image.');
+        $this->assertEquals('Alt text', $image->alt, 'Invalid alt text set on image.');
+        $this->assertRegexp(
+            '/image(\.\w+)?\.jpg/', 
+            $image->file->name, 
+            'Invalid image filename.'
+        );
+        
+        $imagePath = $image->file->path;
+        
+        $mockRequest = \Mockery::mock('Illuminate\Http\Request');
+        $mockRequest->shouldReceive('all')
+            ->andReturn([
+                'title' => 'Title 2',
+                'alt' => 'Alt text 2'
+            ]);
+            
+        $controller->update($image->id, $mockRequest);
+        
+        $image = Image::findOrFail($image->id);
+            
+        $this->assertEquals('Title 2', $image->title, 'Invalid title set on image.');
+        $this->assertEquals('Alt text 2', $image->alt, 'Invalid alt text set on image.');
+        $this->assertEquals(
+            $imagePath, 
+            $image->file->path, 
+            'Invalid image path after update.'
+        );
+        
+        $mockRequest = \Mockery::mock('Illuminate\Http\Request');
+        $mockRequest->shouldReceive('all')
+            ->andReturn([
+                'file' => $this->getTestUploadedFile()
+            ]);
+            
+        $controller->update($image->id, $mockRequest);
+        
+        $image = Image::findOrFail($image->id);
+        $storage = $this->app['filesystem'];
+        
+        $this->assertNotEquals($imagePath, $image->file->path, 'File path not updated properly.');
+        $this->assertFalse($storage->exists($imagePath), 'Old file not deleted.');
     }
     
     public function testDeletingAttachment()
