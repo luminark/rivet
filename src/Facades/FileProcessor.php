@@ -1,4 +1,4 @@
-<?php 
+<?php
 
 namespace Luminark\Rivet\Facades;
 
@@ -7,8 +7,8 @@ use Luminark\Rivet\Interfaces\FileProcessorInterface;
 
 class FileProcessor extends Facade
 {
-    protected static function getFacadeAccessor() 
-    { 
-        return FileProcessorInterface::class; 
+    protected static function getFacadeAccessor()
+    {
+        return FileProcessorInterface::class;
     }
 }

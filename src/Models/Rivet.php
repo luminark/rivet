@@ -15,11 +15,11 @@ use Illuminate\Support\Str;
 class Rivet extends Model
 {
     use HasSerializableValuesTrait;
-    
+
     public static function boot()
     {
         parent::boot();
-        
+
         if (static::class == Rivet::class) {
             static::addGlobalScope(new RivetTypeScope(static::class));
             static::saving(function ($model) {
@@ -27,14 +27,14 @@ class Rivet extends Model
             });
         }
     }
-    
+
     protected $fillable = ['values'];
-    
+
     protected function getSerializableAttributes()
     {
         return ['file'];
     }
-    
+
     public static function getMorphToSortableManyOtherKey()
     {
         return null;

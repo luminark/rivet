@@ -1,4 +1,4 @@
-<?php 
+<?php
 
 namespace Luminark\Rivet\Traits;
 
@@ -19,12 +19,12 @@ trait ControlsRivetsTrait
                 $rivet->$attribute = $fileProcessor->processFile($rivet, $data[$attribute]);
             }
         }
-        
+
         $rivet->save();
-        
+
         return $rivet;
     }
-    
+
     protected function updateRivet(Rivet $rivet, $data)
     {
         $fileAttributes = $this->getFileAttributes(get_class($rivet));
@@ -37,34 +37,34 @@ trait ControlsRivetsTrait
             }
         }
         $rivet->fill(array_except($data, $fileAttributes));
-        
+
         $rivet->save();
-        
+
         $this->getStorage()->delete($oldFiles);
     }
-    
+
     protected function getFileAttributes($class)
     {
         return $this->getConfig()->get(
             'luminark.rivet.' . $class . '.file_attributes', []
         );
     }
-    
+
     protected function getConfig()
     {
         return Config::getFacadeRoot();
     }
-    
+
     protected function getFileProcessor()
     {
         return FileProcessor::getFacadeRoot();
     }
-    
+
     protected function getStorage()
     {
         return Storage::getFacadeRoot();
     }
-    
+
     protected function getFilePath(Rivet $rivet, $attribute)
     {
         return object_get($rivet->$attribute, 'path');

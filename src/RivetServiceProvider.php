@@ -16,16 +16,16 @@ class RivetServiceProvider extends ServiceProvider
             __DIR__ . '/../database/migrations/' => database_path('migrations')
         ], 'migrations');
         $this->publishes([
-            __DIR__.'/../config/luminark/rivet.php' => config_path('luminark/courier.php'),
+            __DIR__ . '/../config/luminark/rivet.php' => config_path('luminark/courier.php'),
         ], 'config');
     }
-    
+
     public function register()
     {
         $this->mergeConfigFrom(
-            __DIR__.'/../config/luminark/rivet.php', 'luminark.rivet'
+            __DIR__ . '/../config/luminark/rivet.php', 'luminark.rivet'
         );
-        
+
         $this->app->bind(FileProcessorInterface::class, function ($app) {
             return $app->make(FileProcessor::class);
         });
