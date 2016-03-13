@@ -171,7 +171,7 @@ trait HasRivetsTrait
     {
         return $this->morphToSortedMany(
             $class,
-            'rivetable',
+            $class::getMorphToManyName(),
             'position',
             null,
             null,

@@ -35,6 +35,11 @@ class Rivet extends Model
         return ['file'];
     }
 
+    public static function getMorphToManyName()
+    {
+        return 'rivetable';
+    }
+
     public static function getMorphToSortableManyOtherKey()
     {
         return null;

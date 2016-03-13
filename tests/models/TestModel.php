@@ -21,8 +21,9 @@ class TestModel extends Model
     protected function getRivetsConfig()
     {
         return [
-            'attachments' => ['collection', Rivet::class],
-            'image' => ['property', Image::class]
+            'samples' => ['collection', Rivet::class],
+            'image' => ['property', Image::class],
+            'attachments' => ['collection', Attachment::class]
         ];
     }
 }

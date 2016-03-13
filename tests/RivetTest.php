@@ -98,23 +98,23 @@ class RivetTest extends TestCase
         $rivet1->file = $fileProcessor->processFile($rivet1, $uploadedFile);
         $rivet1->save();
 
-        $model->attach('attachments', $rivet1, false);
-        $model->addAttachment($rivet1, false);
+        $model->attach('samples', $rivet1, false);
+        $model->addSample($rivet1, false);
 
-        $model->load('attachments');
+        $model->load('samples');
 
         $this->assertRegexp(
             '/image(\.\w+)?\.jpg/',
-            $model->attachments->get(0)->file->name,
-            'Invalid attachment filename.'
+            $model->samples->get(0)->file->name,
+            'Invalid sample filename.'
         );
         $this->assertRegexp(
             '/image(\.\w+)?\.jpg/',
-            $model->attachments->get(1)->file->name,
-            'Invalid attachment filename.'
+            $model->samples->get(1)->file->name,
+            'Invalid sample filename.'
         );
-        $this->assertEquals(1, $model->attachments->get(0)->pivot->position, 'Invalid attachment position.');
-        $this->assertEquals(2, $model->attachments->get(1)->pivot->position, 'Invalid attachment position.');
+        $this->assertEquals(1, $model->samples->get(0)->pivot->position, 'Invalid sample position.');
+        $this->assertEquals(2, $model->samples->get(1)->pivot->position, 'Invalid sample position.');
     }
 
     public function testAttachingAsProperty()
@@ -162,26 +162,26 @@ class RivetTest extends TestCase
     public function testAttachingWithoutFile()
     {
         $model = TestModel::create([]);
-        $model->addAttachment(Rivet::create([]), true);
+        $model->addSample(Rivet::create([]), true);
 
-        $this->assertEquals(1, $model->attachments->count(), 'Invalid number of attachments in collection.');
+        $this->assertEquals(1, $model->samples->count(), 'Invalid number of samples in collection.');
     }
 
-    public function testRemovingAttachments()
+    public function testRemovingSamples()
     {
         $model = TestModel::create([]);
         $uploadedFile = $this->getTestUploadedFile();
         $fileProcessor = $this->app->make(FileProcessorInterface::class);
 
-        $attachment1 = new Rivet([]);
-        $attachment2 = new Rivet([]);
-        $attachment1->file = $fileProcessor->processFile($attachment1, $uploadedFile);
-        $attachment2->file = $fileProcessor->processFile($attachment2, $uploadedFile);
-        $attachment1->save();
-        $attachment2->save();
+        $sample1 = new Rivet([]);
+        $sample2 = new Rivet([]);
+        $sample1->file = $fileProcessor->processFile($sample1, $uploadedFile);
+        $sample2->file = $fileProcessor->processFile($sample2, $uploadedFile);
+        $sample1->save();
+        $sample2->save();
 
-        $model->addAttachment($attachment1);
-        $model->addAttachment($attachment2);
+        $model->addSample($sample1);
+        $model->addSample($sample2);
 
         $image = new Image([
             'alt' => 'Image alt',
@@ -192,23 +192,23 @@ class RivetTest extends TestCase
 
         $model->setImage($image);
 
-        $model->removeAttachment($attachment1);
-        $model->removeAttachment($attachment2->id);
+        $model->removeSample($sample1);
+        $model->removeSample($sample2->id);
         $model->unsetImage($image);
 
-        $this->assertEquals(0, $model->attachments->count(), 'Collection attachment objects not properly removed.');
-        $this->assertEquals(null, $model->image, 'Property attachment object not properly removed.');
+        $this->assertEquals(0, $model->samples->count(), 'Collection sample objects not properly removed.');
+        $this->assertEquals(null, $model->image, 'Property sample object not properly removed.');
     }
 
-    public function testRemovingNonExistantAttachment()
+    public function testRemovingNonExistantSample()
     {
         $model = TestModel::create([]);
-        $attachment = Rivet::create([]);
-        $model->addAttachment($attachment);
+        $sample = Rivet::create([]);
+        $model->addSample($sample);
 
         $this->setExpectedException('InvalidArgumentException');
 
-        $model->removeAttachment($attachment->id + 1);
+        $model->removeSample($sample->id + 1);
     }
 
     public function testRemovingWithInvalidParameter()
@@ -217,7 +217,7 @@ class RivetTest extends TestCase
 
         $this->setExpectedException('InvalidArgumentException');
 
-        $model->removeAttachment('foo');
+        $model->removeSample('foo');
     }
 
     public function testRivetController()
@@ -281,7 +281,22 @@ class RivetTest extends TestCase
         $this->assertFalse($storage->exists($imagePath), 'Old file not deleted.');
     }
 
-    public function testDeletingAttachment()
+    public function testAttachments()
+    {
+        $model = TestModel::create([]);
+        $uploadedFile = $this->getTestUploadedFile();
+        $fileProcessor = $this->app->make(FileProcessorInterface::class);
+
+        $attachment = new Attachment(['title' => 'Title', 'size' => '1 MB']);
+        $attachment->file = $fileProcessor->processFile($attachment, $uploadedFile);
+        $attachment->save();
+
+        $model->addAttachment($attachment, true);
+
+        dd($model->attachments);
+    }
+
+    public function testDeletingSample()
     {
         $model = TestModel::create([]);
         $uploadedFile = $this->getTestUploadedFile();
@@ -291,10 +306,10 @@ class RivetTest extends TestCase
         $rivet1->file = $fileProcessor->processFile($rivet1, $uploadedFile);
         $rivet1->save();
 
-        $model->addAttachment($rivet1);
+        $model->addSample($rivet1);
     }
 
-    public function testAttachmentFiles()
+    public function testSampleFiles()
     {
     }
 
