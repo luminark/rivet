@@ -1,4 +1,4 @@
-# Luminark Attachment Package
+# Luminark Rivet Package
 
 [![Latest Version on Packagist][ico-version]][link-packagist]
 [![Software License][ico-license]](LICENSE.md)
@@ -10,80 +10,101 @@
 [![Code Coverage][ico-codecov]][link-codecov]
 [![SensioLabsInsight][ico-sensio]][link-sension]
 
-Attachment package provides foundation for easy and rapid development of sortable attachment Eloquent models for your app. Models representing file attachments, gallery images, or similar can be easily added to your app and attached to existing models. 
+Rivet package provides foundation for easy and rapid development of library-like, attachable and sortable Eloquent models for your app. Models representing file attachments, images or similar can be easily added to your app and attached to existing models. 
 
 ## Install
 
 Via Composer
 
 ``` bash
-$ composer require luminark/attachment
+$ composer require luminark/rivet
 ```
 
 ## Usage
 
-Eloquent models that have one or many attachment models must use the `HasAttachmentsTrait` trait. This trait takes advantage of PHP's magic methods to allow quick use without much coding, while leaving room for further optimization.
+Eloquent models that have one or many rivet models must use the `HasRivetsTrait` trait. This trait takes advantage of PHP's magic methods to allow quick use without much coding, while leaving room for further optimization.
 
-For example, lets assume we have a model `Page` and we want it to have a collection of `FileAttachment`s and a single `CoverImage`.
+For example, lets assume we have a model `Page` and we want it to have a collection of `Attachment`s and a single `Image`.
 
 ``` php
 class Page extends Model
 {
-    use HasAttachmentsTrait;
+    use HasRivetsTrait;
     
-    protected function getAttachableConfig()
+    protected function getRivetsConfig()
     {
         return [
-            'fileAttachments' => ['collection', FileAttachment::class],
-            'coverImage' => ['property', CoverImage::class]
+            'attachments' => ['collection', Attachment::class],
+            'image' => ['property', Image::class]
         ];
     }
 }
 
 ```
 
-We use the `getAttachableConfig` method to define properties on the parent model that map to a collection, or a property of attachment models. Attachment models inherit from the base `Luminark\Attachment\Models\Attachment` class.
+We use the `getRivetsConfig` method to define attributes on the parent model which map to a collection or a property of attachable models. Attachable models inherit from the base `Luminark\Attachment\Models\Rivet` class.
 
 ``` php
-class CoverImage extends Attachment
+class Image extends Rivet
 {
-    use UsesAttachmentsTableTrait;
-    
-    protected function getSerializableAttributes()
+    protected $fillable = ['title', 'size'];
+
+    public static function getMorphToManyName()
     {
-        return ['file', 'alt', 'title'];
+        return 'imageable';
     }
 }
 ```
 
-Attachment classes can share the base `attachments` table. Although this doesn't translate to a normalized database, it's a variant of the single table inheritance object mapping that allows us to develop and setup a working app very quickly. If you want the extending attachment object to share the base table, simply have it use the `Luminark\Attachment\Traits\UsesAttachmentsTableTrait` trait.
+Attaching classes can share the base `rivets` table for quicker prototyping. Although this doesn't translate to a normalized database, it's a variant of the single table inheritance object mapping that allows us to develop and setup a working app very quickly. If you want the extending model class to share the base table, simply have it use the `Luminark\Attachment\Traits\UsesRivetsTableTrait` trait.
 
-Attachment classes have an attribute named `values`. The contents of this attribute are serialized when being stored to the database, and deserialized when reading from it, which makes for a convenient storage of variable amount of data. To take advantage of this, you can use the `getSerializableAttributes` method on the attachment model to define which elements of the `values` array can be accessed as model's attributes. With the class from example above, the following would work as expected.
+If the extending model class is using its own database table, make sure to override the `getMorphToManyName` method which is used to properly map attaching models to parent models via polymorphic many-to-many relationship.
+
+The `Attachment` model from our example can share the base table:
+
+``` php
+class Attachment extends Rivet
+{
+    use UsesRivetsTableTrait;
+
+    protected function getSerializableAttributes()
+    {
+        return ['file', 'title'];
+    }
+}
+```
+
+The base `Rivet` class implements the `Luminark\SerializableValues\Traits\HasSerializableValuesTrait` which gives it (and all extending classes) access to `values` attribute. The contents of this attribute are serialized when being stored to the database, and deserialized when reading from it, which makes for a convenient storage of variable amount of data. To take advantage of this, you can use the `getSerializableAttributes` method on the attaching model to define which elements of the `values` array can be accessed as model's attributes. If the extending class is not sharing the `rivets` table, a `values` column should be added to extending class' table if this functionality is needed.
+
+With the class from example above, the following would work as expected.
 
 ``` php
 $page = Page::find(1);
-$coverImage = $page->coverImage;
+$image = $page->image;
 
-$coverImage->title; // returns value of $coverImage->values['title']
+$image->title; // returns value of $image->values['title']
 ```
 
-Models implementing the `HasAttachmentsTrait` trait have several methods for setting and removing attachments at disposal out of the box.
+Models implementing the `HasRivetsTrait` trait have several methods for setting and removing attachable models at disposal out of the box.
 
 ``` php
 $page = Page::find(1);
 
 // setModelName and unsetModelName for model as property
-$page->setCoverImage($dataArray);
-$page->unsetCoverImage($modelIdOrModelObject);
+$page->setImage($model);
+$page->unsetImage($modelIdOrModelObject);
 
 // addModelName or removeModelName for models in collection
-$page->addFileAttachment($dataArray);
-$page->removeFileAttachment($dataArray);
+$page->addAttachment($model);
+$page->removeAttachment($modelIdOrModelObject);
 
 // Getters
-$page->coverImage;
-$page->fileAttachments;
+$page->image;
+$page->attachments;
 ```
+
+### File processing
+A convenient class for processing files related to attachable models comes with the package. It is acessible via `Luminark\Rivet\Facades\FileProcessor` facade or via dependency injection by type hinting `Luminark\Rivet\Interfaces\FileProcessorInterface`. It has a single method `processFile` which takes the attachable model object for which the file is being processed and reference to a file (a `string` path, `Symfony\Component\HttpFoundation\File\File` object or `Symfony\Component\HttpFoundation\File\UploadedFile` object). This method will attempt to store the file to a storage disk defined in Laravel config and fire events.
 
 ## Change log
 

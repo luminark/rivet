@@ -1,2 +1,3 @@
 /vendor
-/tests/database/migrations/2015_04_12_000000_create_attachments_tables.php
+/tests/database/migrations/2015_04_12_000000_create_rivets_table.php
+/tests/database/migrations/2015_04_12_000001_create_rivetables_table.php

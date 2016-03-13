@@ -293,7 +293,13 @@ class RivetTest extends TestCase
 
         $model->addAttachment($attachment, true);
 
-        dd($model->attachments);
+        $this->assertEquals(1, $model->attachments->count(), 'Invalid attachment count.');
+        $this->assertEquals('Title', $model->attachments->first()->title, 'Invalid attachment attribute');
+        $this->assertRegexp(
+            '/image(\.\w+)?\.jpg/',
+            $model->attachments->first()->file->name,
+            'Invalid image filename.'
+        );
     }
 
     public function testDeletingSample()
